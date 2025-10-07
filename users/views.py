@@ -32,6 +32,17 @@ def register(request):
         if "@" not in email or "." not in email:
             messages.error(request, "Invalid email address.")
             return  render(request, 'admin-register.html')
+        if len(phone) < 10 or not phone.isdigit():
+            messages.error(request, "Invalid phone number.")
+            return  render(request, 'admin-register.html')
+        isUserNameTaken = User.objects.filter(username=username).exists()
+        if isUserNameTaken:
+            messages.error(request, "Username is already taken.")
+            return render(request, "admin-register.html")
+        isEmailTaken = User.objects.filter(email=email).exists()
+        if isEmailTaken:
+            messages.error(request, "Email is already taken.")
+            return render(request, "admin-register.html")
         try:
             with transaction.atomic():
                 # ✅ Create user
@@ -65,3 +76,26 @@ def register(request):
             messages.error(request, f"Error: {str(e)}")
             return render(request, "admin-register.html")
     return render(request, 'admin-register.html')
+
+def login(request):
+    if request.method == 'POST':
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        if not username or not password:
+            messages.error(request, "All fields are required.")
+            return  render(request, 'admin-login.html')
+        try:
+            user = User.objects.get(username=username)
+            if user.check_password(password):
+                if user.role != 'admin':
+                    messages.error(request, "You are not authorized to access the admin panel.")
+                    return render(request, 'admin-login.html')
+                messages.success(request, "Login successful!")
+                return redirect('/admin/')  # Redirect to Django admin dashboard
+            else:
+                messages.error(request, "Invalid username or password.")
+                return render(request, 'admin-login.html')
+        except User.DoesNotExist:
+            messages.error(request, "Invalid username or password.")
+            return render(request, 'admin-login.html')
+    return render(request, 'admin-login.html')
