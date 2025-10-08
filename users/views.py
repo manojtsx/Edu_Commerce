@@ -4,7 +4,7 @@ from .models import Admin
 from django.db import IntegrityError, transaction
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login, authenticate, logout
 from django.contrib.auth.hashers import make_password
 
 User = get_user_model()
@@ -46,12 +46,11 @@ def register(request):
         try:
             with transaction.atomic():
                 # ✅ Create user
-                hashed_password = make_password(password)
                 user = User.objects.create_user(
                     username=username,
                     email=email,
                     phone=phone,
-                    password=hashed_password,
+                    password=password,
                     role="admin"
                 )
 
@@ -77,21 +76,30 @@ def register(request):
             return render(request, "admin-register.html")
     return render(request, 'admin-register.html')
 
-def login(request):
+def login_view(request):
+    print(request.user, 'request')
+    if request.user.is_authenticated:
+        return redirect("/adminpanel/dashboard")
     if request.method == 'POST':
         username = request.POST.get("username")
         password = request.POST.get("password")
+        print(username, password, "admin login")
         if not username or not password:
             messages.error(request, "All fields are required.")
             return  render(request, 'admin-login.html')
         try:
             user = User.objects.get(username=username)
-            if user.check_password(password):
+            print(user, 'user')
+            if user and user.check_password(password):
+                print(user.role, 'role')
                 if user.role != 'admin':
                     messages.error(request, "You are not authorized to access the admin panel.")
                     return render(request, 'admin-login.html')
-                messages.success(request, "Login successful!")
-                return redirect('/admin/')  # Redirect to Django admin dashboard
+                authenticatedUser = authenticate(request, username=username, password=password)
+                if authenticatedUser is not None:
+                    login(request, authenticatedUser)
+                    messages.success(request, "Login successful!")
+                    return redirect('/adminpanel/dashboard/')  # Redirect to Django admin dashboard
             else:
                 messages.error(request, "Invalid username or password.")
                 return render(request, 'admin-login.html')
@@ -99,3 +107,7 @@ def login(request):
             messages.error(request, "Invalid username or password.")
             return render(request, 'admin-login.html')
     return render(request, 'admin-login.html')
+
+def logout_view(request):
+    logout(request)
+    return redirect('/login')
