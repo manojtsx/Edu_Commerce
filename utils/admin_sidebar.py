@@ -13,7 +13,7 @@ ADMIN_SIDEBAR_MENU = [
         "path": "#",  # No path, since it has submenus
         "submenus": [
             {"id": "ADMIN_ALL_USERS", "name": "All Users", "path": "/adminpanel/users/"},
-            {"id": "ADMIN_ADD_USER", "name": "Add User", "path": "/adminpanel/users/add/"},
+            {"id": "ADMIN_ADD_STAFF", "name": "Add Staff", "path": "/adminpanel/users/add/staff/"},
         ]
     },
     {

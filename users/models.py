@@ -15,7 +15,11 @@ class User(AbstractUser):
     phone = models.CharField(max_length=15, blank=True, null=True)
     password = models.CharField(max_length = 255)
     role = models.CharField(max_length= 50, choices=ROLES)
+    createdAt = models.DateTimeField(auto_now_add= True)
     updated_at = models.DateTimeField(auto_now= True)
+    lastLogin = models.DateTimeField(auto_now= True)
+    isActive = models.BooleanField(default=True)
+    isPasswordChanged = models.BooleanField(default=False)
     def __str__(self):
         return self.username
     
@@ -26,6 +30,8 @@ class Admin(models.Model):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
     def __str__(self):
         return self.user.username
     
